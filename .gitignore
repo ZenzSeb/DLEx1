@@ -1,0 +1,8 @@
+/plots
+*.gz
+*.fls
+/.latex-build
+*.fdb_latexmk
+*.log
+*.aux
+*.toc
