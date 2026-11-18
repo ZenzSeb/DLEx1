@@ -1,0 +1,461 @@
+% Report skeleton for Linear and Logistic Regression, WS 2026/27.
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{bm}
+
+\newcommand{\sheetnumber}{2}
+\newcommand{\R}{\mathbb{R}}
+
+\usepackage{listings}
+
+\providecommand{\xx}{\mathbf{x}}
+\providecommand{\yy}{\mathbf{y}}
+\providecommand{\XX}{\mathbf{X}}
+\providecommand{\tth}{\boldsymbol{\theta}}
+\providecommand{\sigm}{\sigma}
+\providecommand{\rank}{\operatorname{rank}}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  frame=single,
+  breaklines=true,
+  columns=fullflexible
+}
+
+\begin{document}
+
+\begin{titlepage}
+  \begin{center}
+    {\Large \textbf{Exercise Sheet \sheetnumber}}
+
+    \vspace{0.5em}
+    Machine Learning for AIE, WS 2026/27
+
+    \vspace{2em}
+    {\LARGE \textbf{Linear and Logistic Regression}}
+  \end{center}
+
+  \vspace{2em}
+  \begin{center}
+    \begin{tabular}{|l|l|l|}\hline
+      \multicolumn{3}{|c|}{\textbf{Team Members}} \\\hline
+      Last name & First name & Matriculation number \\\hline
+      ZENZ & Sebastian & 01031159 \\\hline
+    \end{tabular}
+  \end{center}
+\end{titlepage}
+
+\tableofcontents
+\clearpage
+
+\section{Task 1: Linear Regression- Closed-Form Solution}
+\label{sec:closedform}
+
+\subsection{Task 1.1: Pen and paper computation}
+\label{subsec:closedform1}
+For task 1.1 a toy data set of $N = 4$ houses is examined. The input $x$ is the number of rooms and the target $y$ is the price (in 100\,k\$):
+\begin{itemize}[itemsep=0.1em]
+  \item Task 1.1(a) The design matrix $\XX$ and target variable $\yy$ are defined. $\XX^T\XX$, $\XX^T\yy$, $\tth^* = (\theta_0^*, \theta_1^*)^T$, $\hat{y}^{(i)} = \tth^{*T}\xx^{(i)}$ and the loss $\mathcal{L}(\tth^*)$ are computed. 
+  \item Task 1.1(b) A second feature $x_2 = 2x_1$ (number of windows) was added to the design matrix. 
+      The rank of this adjusted design matrix $\widetilde{\mathbf{X}}$ was computed and the invertability was discussed. 
+      Also three different parameter sets $\tth \in \mathbb{R}^3$ were found, that reach the minimal loss from (a)
+\end{itemize}
+
+\begin{center}
+\begin{tabular}{c@{\hspace{2em}}cc}
+    \toprule
+    house $i$ & input $x^{(i)}$ (rooms) & target $y^{(i)}$ (price) \\
+    \midrule
+    1 & 1 & 1 \\
+    2 & 2 & 2 \\
+    3 & 3 & 2 \\
+    4 & 4 & 3 \\
+    \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.6\linewidth]{ML2Ex1_1_1.jpg}
+\end{figure}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.6\linewidth]{ML2Ex1_1_2.jpg}
+  \includegraphics[width=0.6\linewidth]{ML2Ex1_1_3.jpg}
+\end{figure}
+
+\clearpage
+
+\subsection{Task 1.2: Implementation in code}
+\label{subsec:closedform2}
+
+The functions \texttt{add\_bias(X)}, \texttt{fit\_closed\_form(X, y)}, \texttt{predict(X, theta)} and \texttt{mse(y\_true, y\_pred)} and 
+\texttt{fit\_closed\_form(X, y)} were implemented.
+\newline The linear system $\XX^T\XX\,\tth = \XX^T\yy$ was solved with \texttt{np.linalg.solve} and the results are compared to the manual computations in Task 1.1 (they do match!):
+\begin{lstlisting}
+=== Task 1.2: Print theta*, the predictions y_hat and the loss function and compare with np.linalg.lstsq ===
+theta*: shape = (2,), values = [0.5 0.6]
+theta* matches np.linalg.lstsq: True
+prediction: shape = (4,), values = [1.1 1.7 2.3 2.9]
+prediction matches np.linalg.lstsq: True
+training MSE: 0.05
+training MSE matches np.linalg.lstsq: True
+\end{lstlisting}
+
+\noindent Figure~\ref{fig:toydatafit} plots the toy dataset and displays the linear predictor function \(f(x)\).
+\newline As \(f(x)\) is a linear function with parameters $\boldsymbol{\theta} \in \mathbb{R}^2$, $\theta_0^*$ [100 k\$] represents the intercept (value at \(x=0\)), and $\theta_1^*$ [100 k\$\ (per room)] the slope of the straight line.
+Parameter $\theta_0^*$ is the bias or in the case of the toy dataset the baseline price for a house (e.g. land price etc., independent of the number of rooms) and is essential to get a proper prediction for the house price (minimum loss).
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.6\linewidth]{../Plots/1_toy_fit.pdf}
+  \caption{Datapoints of toy dataset with predictions and residuals}
+  \label{fig:toydatafit}
+\end{figure}
+
+\subsection{Task 1.3: Additional feature: number of windows}
+The toy data with the additional window feature from Task1.1(b) was also fitted in the code:
+\begin{lstlisting}
+Task 1.3: design matrix of shape (4, 3), rank 2, condition number of X^T X: 3.11e+33
+fit_closed_form failed: Singular matrix
+np.linalg.lstsq: theta* = [0.5  0.12 0.24] , training MSE = 0.0500
+\end{lstlisting}
+
+\noindent The output \texttt{fit\_closed\_form failed: Singular matrix} indicates that the matrix
+$\mathbf{X}^{\mathsf{T}}\mathbf{X}$ is singular. Since $x_2 = 2x_1$, the corresponding
+feature columns in the design matrix $\mathbf{X}$ are linearly dependent, as shown in Task 1.1(b). Therefore,
+$\mathbf{X}^{\mathsf{T}}\mathbf{X}$ is non-invertible, and the closed-form solution
+cannot be computed. This can be addressed by removing
+one of the dependent features - which was also shown in Task 1.1(b): $\boldsymbol{\theta}^1$, $\boldsymbol{\theta}^2$ and $\boldsymbol{\theta}^3$ 
+result in the same mean square error - or use more advanced concepts like regularization.
+
+\clearpage
+
+\section{Task 2: Linear Regression on real data}
+\label{sec:LRreal}
+
+The provided dataset (\emph{Ames Housing}, $N = 2413$) was imported and randomly split into 70\% training and 30\% test data:
+\begin{lstlisting}
+========== Task 2 ==========
+Ames Housing prices dataset: min = 35.0 k$, median = 159.0 k$, mean = 175.6 k$, max = 755.0 k$
+1689 training and 724 test houses - test split = 30.0% of dataset
+\end{lstlisting}
+
+\subsection{Task 2.1: Visualisation of dataset}
+\label{subsec:LRreal1}
+
+A histogram of the house prices of the dataset is plotted in Figure~\ref{fig:LRReal_histo} and scatter plots of the house price over earch of the 9 included features
+is visualized in Figure~\ref{fig:LRReal_poverf}.
+\\ The price distribution does \textbf{not appear symmetric}. Reasoning:
+\begin{itemize}[itemsep=0.1em]
+  \item For a symmetric distribution the left and right sides would be approximately mirror images
+  \item The shape of the histogram appear to be right(positively)-skewed with a long right tail with a max\_price = 755.0 k\$
+  \item The mean\_price = 175.6 k\$ is significantly larger than the median\_price = 159.0 k\$
+\end{itemize}
+
+\noindent Analysing the impact of individual features in relation to the house price in Figure~\ref{fig:LRReal_poverf} leads to following observations:
+\begin{itemize}[itemsep=0.1em]
+  \item The features with the highest impact on price are:
+  \begin{itemize}[itemsep=0.1em]
+    \item $Overall$ $quality$: highest impact, price increases almost monotonically as quality increases
+    \item $Living$ $area$: clear positive trend
+    \item $Garage$ and $basement$ $area$: similiar trends to $living$ $area$ (assumption: correlation with living area - bigger house, bigger basement/garage).
+  \end{itemize}
+  \item The $overall$ $quality$ relationship to price is clearly non-linear as the higher end of the spectrum increases the price unproportional (non-linear)
+  \item The $year$ $built$ relationship seems to be non-linear as well (similiar observations as stated for $overall$ $quality$)
+  \item The price of houses realted to the $number$ $of$ $fireplaces$ do not follow a linear trend (e.g. houses with 2 or more fireplaces are not more expensive than houses with less by default)
+  \item $Basement$ and $garage$ $area$ do not fit easily in the regression model, as there are several houses with 0$m^2$ in the dataset that span from ~35 k\$ to ~290 k\$.
+  \item Besides the houses with 0$m^2$ basements/garages, several other outliers can be detected:
+  \begin{itemize}[itemsep=0.1em]
+    \item There are several houses with very large lot areas $>10000 m^2$ while most of the houses have $<3000 m^2$
+    \item A handful of houses above 600-750 k\$ are extreme price outliers (high overall quality, newly built)
+  \end{itemize}
+\end{itemize}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.8\linewidth]{../Plots/2_price_histogram.pdf}
+  \caption{Histogram of house prices}
+  \label{fig:LRReal_histo}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=1\linewidth]{../Plots/2_price_over_features.pdf}
+  \caption{House price over features}
+  \label{fig:LRReal_poverf}
+\end{figure}
+
+\clearpage
+\subsection{Task 2.2: Linear regression for housing price dataset}
+\label{subsec:LRreal2}
+The linear regression model from Task 1.2 was fitted for the housing price dataset. Two variantions of the model were implemented:
+\begin{itemize}[itemsep=0.1em]
+  \item (i):  Model predicts price on the $living$ $area$ only
+  \item (ii): Model predicts price on all 9 features of the dataset
+\end{itemize}
+
+\noindent The code was adjusted to report $\tth^*$ and the training and test MSE and RMSE $= \sqrt{\text{MSE}}$ of both models:
+
+\begin{lstlisting}
+=== Task 2.2: apply linear regression to housing price data ===
+Model (i): theta* =
+  bias                 16.413
+  living_area           1.152
+matches np.linalg.lstsq: True
+
+Training set: MSE = 2269.6931 k$^2, RMSE: 47.6413 k$
+Training set: MSE matches np.linalg.lstsq: True
+Test set: MSE = 2400.8332 k$^2, RMSE: 48.9983 k$
+
+Model (ii): theta* =
+  bias               -792.122
+  living_area           0.758
+  lot_area              0.009
+  basement_area         0.326
+  garage_area           0.377
+  year_built            0.380
+  overall_quality      16.245
+  bedrooms            -10.539
+  bathrooms            -8.145
+  fireplaces            6.171
+matches np.linalg.lstsq: True
+
+Training set: MSE = 744.1591 k$^2, RMSE: 27.2793 k$
+Training set: MSE matches np.linalg.lstsq: True
+Test set: MSE = 745.0617 k$^2, RMSE: 27.2958 k$
+\end{lstlisting}
+
+\vspace{0.5em}
+\noindent $\theta_1^*$ of model (i) in units of [k\$\ (per $m^2$ living area)] can be interpreted as the slope of the linear predictor function 
+or in the specific case for the housing price: the predicted price increase in k\$ for increasing the living area by 1 $m^2$.
+\vspace{1em}
+\\
+\noindent Model (i) is a special case of model (ii): the all-features model can reproduce the living-area-only model by setting the coefficients 
+of the other eight features to zero. 
+Since both models are fitted by least squares on the same training data, model (ii) has at least as many possible predictors and can 
+choose the same solution as model (i), or find one with lower training error. 
+Therefore, the minimum training MSE of model (ii) cannot be larger that the training MSE of model (i)
+This guarantee applies only to training error. Adding features can fit the training data more closely but does not guarantee lower test MSE as
+the extra features may cause overfitting.
+\vspace{1em}
+\\
+\noindent The negative bedroom coefficient in model (ii) does not mean that adding a bedroom generally makes a house cheaper. 
+In this model, it indicates that, when all other included features are held constant, one additional bedroom is associated with a predicted price decrease of approximately $\$10539$.
+In the specific case for housing prices it can be interpreted as follows: with the same living area, overall quality, ... a higher number of bedrooms indicate smaller room sizes on average, which can have an negative impact on the attractiveness of a house and therefore can lower the value of the house overall.
+
+\clearpage
+
+\noindent Figure~\ref{fig:LRReal_linModels} plots the linear model prediction for the house price in k\$ in relation to the incorporated features.
+\\Model (i) only use the living area as its sole feature - while the regression line captures the general trend that larger homes tend to be more expensive, the data points scatter around the line, especially for larger living areas. 
+This indicates that living area alone cannot fully explain the variation in housing prices, as properties with similar sizes may have very different market values due to other factors.
+\\ Predictions from model (ii), which incorporates all available features, are generally clustered more closely around the perfect prediction line, as seen in the right plot, indicating a better fit and higher predictive accuracy.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=1\linewidth]{../Plots/2_linear_models.pdf}
+  \caption{Visualization of the linear models and predictions}
+  \label{fig:LRReal_linModels}
+\end{figure}
+
+\subsection{Task 2.3: Non-linear features}
+\label{subsec:LRreal3}
+
+For task 2.3 $x$ is repleacd by (non-linear) polynomial features $\bm{\phi}(x) = (1, x, x^2, \dots, x^d)^T$ of degree $d$. 
+The function \texttt{poly\_features(x, degree)} was implemented, which returns the design matrix $\bm{\Phi} \in \R^{N \times (d+1)}$ including the constant column.
+\vspace{0.5em}
+\\With this adjusted design matrix the non-linear relationship between the overall quality and the housing price can be better predicted.
+\vspace{0.5em}
+\\Increasing the polynomial degree allows the model to capture non-linear pattern in the data as seen in the decreasing training MSE
+in Figure~\ref{fig:LRReal_nonlinFeatures} and in the output provided:
+\vspace{1em}
+\begin{lstlisting}
+=== Task 2.3: implement non-linear features (poly) ===
+degree 1: training MSE =  1882.7 k$^2, test MSE =  1989.3 k$^2
+degree 2: training MSE =  1599.9 k$^2, test MSE =  1753.0 k$^2
+degree 3: training MSE =  1543.0 k$^2, test MSE =  1722.0 k$^2
+degree 4: training MSE =  1539.6 k$^2, test MSE =  1725.0 k$^2
+degree 5: training MSE =  1538.9 k$^2, test MSE =  1723.0 k$^2
+\end{lstlisting}
+
+\clearpage
+\noindent A lower training MSE does not necessarily indicate a better model, since complex models may begin to fit fluctuations and noise rather than the underlying relationship and result in an overfitted model.
+The choice of polynomial degree should therefore be based primarily on the test MSE, which measures how well the model generalizes to unseen data. 
+The preferred degree is the one that achieves the lowest test MSE or provides the best trade-off between predictive performance and model complexity.
+\vspace{0.5em}
+\\In the case of the provided housing dataset a \textbf{polynomial degree of 3} would be well fitted for the model.
+\vspace{1em}
+\\
+\noindent Despite using non-linear features, this approach is still considered
+\textbf{linear regression} because the model remains linear in its
+parameters (weights), e.g. a polynomial model of degree 3 is
+\[
+\hat{y} = w_0 + w_1x + w_2x^2 + w_3x^3.
+\]
+Although the model is non-linear in the input variable \(x\), it is linear
+in the coefficients \(w_0, w_1, w_2,\) and \(w_3\), since the prediction
+is a linear combination of the transformed features the same linear regression framework and optimization methods can be used.
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=1\linewidth]{../Plots/2_polynomial_fits.pdf}
+  \caption{Linear regression with non-linear features}
+  \label{fig:LRReal_nonlinFeatures}
+\end{figure}
+
+
+\clearpage
+\section{Task 3: Logistic Regression}
+\label{sec:LogReg}
+\subsection{Task 3.1: Pen and paper computation for logistic regression}
+\label{subsec:LogReg1}
+
+For task 3.1 several pen and paper computation for the logistic regression were performed:
+\vspace{0.5em}
+\begin{enumerate}[label=(\alph*), itemsep=0.1em, topsep=0.2em]
+    \item Show that $\sigm'(z) = \sigm(z)\big(1 - \sigm(z)\big)$.
+    \item For a toy set of $N = 4$ points with $D = 1$: Starting from $\tth^{(0)} = \mathbf{0}$, compute $\mathcal{L}(\tth^{(0)})$, $\nabla_{\tth}\mathcal{L}(\tth^{(0)})$ and $\tth^{(1)}$ for $\eta = 1$. Verify that $\mathcal{L}(\tth^{(1)}) < \mathcal{L}(\tth^{(0)})$.
+    \item Show that $\hat{y} \geq 0.5$ if and only if $\tth^T\xx \geq 0$. For $D = 2$ and $\theta_2 \neq 0$, write the decision boundary as $x_2 = g(x_1)$.
+\end{enumerate}
+\vspace{1em}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.75\linewidth]{ML2Ex3_1_1.jpg}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.75\linewidth]{ML2Ex3_1_2.jpg}
+\end{figure}
+
+\clearpage
+\noindent When all parameters of $\tth$ are set to zero, the model assigns probability $\sigma(0) = 0.5$ to each class.
+For either label (0 or 1), the binary cross-entropy loss is therefore -log(0.5) = log(2), regardless of how the labels are distributed.
+\\ The gradient descent moves closer to the minimum with each iteration step and fits the model better to the training set $\rightarrow$ BCE loss after first iteration is lower than the first guess of $\tth=\mathbf{0}$.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.75\linewidth]{ML2Ex3_1_3.jpg}
+\end{figure}
+
+\clearpage
+\subsection{Task 3.2 Code implementation of logistic regression}
+\label{subsec:LogReg2}
+
+The required functions were implemented in the code skeleton and tested in \texttt{main.py}. 
+The pen and paper computations in task 3.1(b) were also validated by fitting the model to the same toy dataset and comparing the results of the output:
+
+\begin{lstlisting}
+========== Task 3 ==========
+sigmoid(z) = [0.00000000e+00 4.53978687e-05 5.00000000e-01 9.99954602e-01
+ 1.00000000e+00] (no overflow)
+gradient_descent: starting at theta0 = [0. 0.] with learning_rate = 1.0 and eps = 1e-06
+Task 3.1(b): L(theta^(0)) = 0.6931, gradient = [ 0.  -0.5], theta^(1) = [0.  0.5], L(theta^(1)) = 0.4886
+\end{lstlisting}
+\vspace{1em}
+\noindent The housing dataset was classified/labeled as "high prices", if the house price exceeds $\geq 250\,\text{k\$}$, the dataset was split 
+into the training and test sets and their features $living$ $area$ and $overall$ $quality$ were standardized for further computations.
+\vspace{0.5em}
+\begin{lstlisting}
+fraction of houses with price >= 250 k$: 0.125 (training), 0.149 (test)
+standardization of ['living_area', 'overall_quality']: mean [137.07   6.  ], std [44.69  1.33]
+\end{lstlisting}
+\vspace{1em}
+\noindent After running some sanity checks on the implemented functions, the model classifies the houses from their standardized living area and 
+overall quality with the gradient descent optimization algorithm ($\eta = 1$, $\varepsilon = 10^{-6}$, at most $5000$ iterations). 
+\\ The number of iterations, the final training loss, $\tth$ and the training and test accuracy are reported and
+the plots for decision boundary and the loss function over iterations are included:
+\vspace{0.5em}
+\begin{lstlisting}
+L(0) = log 2: True
+gradient_bce vs. finite differences, max. abs. difference: 2.28e-10
+gradient_descent: starting at theta0 = [0. 0. 0.] with learning_rate = 1.0 and eps = 1e-06
+
+Task 3.2: number of iterations = 2653
+Task 3.2: final training loss = 0.1351
+Task 3.2: final theta = [-5.3571242   2.01155552  2.84604839]
+Task 3.2: training accuracy = 0.9455
+Task 3.2: test accuracy = 0.9351
+\end{lstlisting}
+\vspace{1em}
+\noindent Figure~\ref{fig:LogReg_decisionBound} shows the decision boundary of a binary classifier that separates houses priced below \$250k ("not high-priced") from houses priced at or above \$250k ("high-priced")
+using $living$ $area$ and $overall$ $quality$ as input features. The data reveal a clear relationship between overall quality and house price: 
+houses with higher quality ratings are much more likely to belong to the high-price class. The fitted decision boundary has a negative slope, 
+indicating that a smaller living area can still lead to a high predicted price if the overall quality is sufficiently high, 
+whereas larger houses with lower quality ratings are more likely to be classified as lower-priced properties.
+The dotted lines represent predicted probabilities of 0.1 and 0.9 and illustrate the uncertainty region around the decision boundary.
+
+\vspace{0.5em}
+\noindent Figure~\ref{fig:LogReg_lossCurve} illustrates the training loss measured by binary cross-entropy (BCE) as a function of the optimization iterations. 
+The loss decreases monotonically and indicates that the optimization algorithm successfully updates the model parameters and progressively 
+improves the fit to the training data.
+Since the loss stabilizes and no oscillations or divergence are observed, the optimization appears to be numerically 
+stable and effective for the given classification task.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=1\linewidth]{../Plots/3_decision_boundary.pdf}
+  \caption{Decision boundary for highly prices houses}
+  \label{fig:LogReg_decisionBound}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=1\linewidth]{../Plots/3_loss_curve.pdf}
+  \caption{Binary cross entropy loss (BCE) over iterations for training set}
+  \label{fig:LogReg_lossCurve}
+\end{figure}
+
+\clearpage
+\noindent When only about 13\% of the houses are high-priced, a classifier that always predicts “not high-priced” gets roughly 
+87\% accuracy. In this dataset, the baseline is 1 - 0.125 = 87.5\% on training set and 1 - 0.149 = 85.1\% on the test set.
+The model\'s test accuracy of 93.51\% is about 8\% higher than the test baseline which is a clear improvement, however the model may still perform poorly on outliers.
+
+\vspace{1em}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.75\linewidth]{ML2Ex3_3.jpg}
+\end{figure}
+
+
+\noindent With $\tth$ and Task~3.1(c) the minimal (standardized) overall quality for which a house of average living area (standardized value $0$) is classified as high-priced was calculated to $\mathbf{1.822}$.
+As the overall quality is defined as a discrete (integer) value, the minimum (non-standardized) overall quality that would label a house of average living area as "high-priced" is $\mathbf{9}$.
+
+\vspace{2em}
+\noindent \textit{Additional sanity checks for the last task:}
+\vspace{0.5em}
+\\
+If we would draw a straight vertical line in Figure~\ref{fig:LogReg_decisionBound} for the average living area ($137m^2$), it would hit the decision 
+boundary at the calculated non-standardized overall quality around 8.4, which is consistent with the pen and paper computation.
+\\ Also a sanity check was done in the python implementation. For the standardized living area = 0, the model should predict "not high priced" for standardized
+overall quality <1.882 and "high priced" for values higher than that.
+\vspace{0.5em}
+\begin{lstlisting}
+Sanity check Task 3.2: predict label for average living area and std_quality 1.88: 0
+Sanity check Task 3.2: predict label for average living area and std_quality 1.90: 1
+\end{lstlisting}
+
+\clearpage
+\section{Addendum}
+\subsection{Usage of generative AI}
+\noindent Generative AI was used in the the form of GitHub Copilot in Visual Studio Code. It was used to debug code, 
+especially for pyhton syntax and dimension errors, and to format LaTeX for the report.
+Another usecase was to generate the subplots in task 2.1 (visualisation of dataset) as it is was a repetetive task to set all labels, format axis etc.
+\vspace{0.5em}
+\\The code generation/autocompletion feature was used in some cases, but required manual checking and adjustments along the way 
+as the AI model made wrong assumptions for the implementation or wrote code in a hard-to-follow style and tried to put the whole
+functionality in a single return line which made it harder to understand or debug the functions.
+\vspace{0.5em}
+\\Copilot was also used to analyse the chart for the decision boundary to provide some pointers to include in the report, which worked better than 
+expected with only using simple open-ended prompts such as "What do you see in this chart?"
+
+\end{document}
